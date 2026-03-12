@@ -10,6 +10,20 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: resiliq
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
     - uses: actions/checkout@v3
 
@@ -17,6 +31,14 @@ jobs:
       uses: actions/setup-go@v4
       with:
         go-version: '1.21'
+        cache: true
+
+    - name: Apply Migrations
+      run: |
+        sudo apt-get update && sudo apt-get install -y postgresql-client
+        PGPASSWORD=password psql -h localhost -U user -d resiliq -f migrations/000001_create_messages_table.up.sql
+        PGPASSWORD=password psql -h localhost -U user -d resiliq -f migrations/000002_add_idempotency_key.up.sql
+        PGPASSWORD=password psql -h localhost -U user -d resiliq -f migrations/000003_create_dlq_table.up.sql
 
     - name: Build
       run: go build -v ./...
