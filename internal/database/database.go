@@ -3,9 +3,9 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"time"
 
+	"github.com/arnoldreis/resiliq/internal/logger"
 	_ "github.com/lib/pq"
 )
 
@@ -45,6 +45,6 @@ func NewConnection(host string, port int, user, password, dbname string) (*DB, e
 		return nil, fmt.Errorf("erro ao pingar banco: %w", err)
 	}
 
-	log.Println("Conexão com o banco de dados estabelecida com sucesso")
+	logger.GetLogger().Info("Conexão com o banco de dados estabelecida com sucesso")
 	return &DB{db}, nil
 }

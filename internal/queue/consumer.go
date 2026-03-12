@@ -8,7 +8,11 @@ import (
 	"time"
 
 	"github.com/arnoldreis/resiliq/internal/database"
+	"github.com/arnoldreis/resiliq/internal/logger"
+	"github.com/arnoldreis/resiliq/internal/metrics"
 	"github.com/arnoldreis/resiliq/internal/models"
+	"github.com/prometheus/client_golang/prometheus"
+	"go.uber.org/zap"
 )
 
 type Consumer struct {
@@ -76,11 +80,18 @@ func (c *Consumer) processNext(ctx context.Context) error {
 		return fmt.Errorf("erro ao atualizar para PROCESSING: %w", err)
 	}
 
+	timer := prometheus.NewTimer(metrics.ProcessingDuration)
+	defer timer.ObserveDuration()
+
 	// simulando processamento (aqui entraria a lógica de negócio)
 	err = c.handleMessage(msg)
 
 	if err != nil {
-		log.Printf("Falha ao processar mensagem %s: %v", msg.ID, err)
+		logger.GetLogger().Error("Falha ao processar mensagem", 
+			zap.String("id", msg.ID.String()), 
+			zap.Error(err),
+		)
+		metrics.MessagesProcessed.WithLabelValues("failed").Inc()
 		return c.handleFailure(ctx, tx, msg, err)
 	}
 
@@ -90,16 +101,15 @@ func (c *Consumer) processNext(ctx context.Context) error {
 		return fmt.Errorf("erro ao marcar como COMPLETED: %w", err)
 	}
 
+	metrics.MessagesProcessed.WithLabelValues("completed").Inc()
 	return tx.Commit()
 }
 
 func (c *Consumer) handleMessage(msg models.Message) error {
-	// simula uma falha aleatória para testar retries (opcional)
-	// if time.Now().UnixNano()%2 == 0 {
-	// 	return fmt.Errorf("erro temporário simulado")
-	// }
-	
-	log.Printf("Processando mensagem %s: %s", msg.ID, string(msg.Payload))
+	logger.GetLogger().Info("Processando mensagem", 
+		zap.String("id", msg.ID.String()),
+		zap.String("payload", string(msg.Payload)),
+	)
 	time.Sleep(200 * time.Millisecond)
 	return nil
 }

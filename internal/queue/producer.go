@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/arnoldreis/resiliq/internal/database"
+	"github.com/arnoldreis/resiliq/internal/metrics"
 )
 
 type Producer struct {
@@ -37,5 +38,8 @@ func (p *Producer) Enqueue(ctx context.Context, payload json.RawMessage, idempot
 	if err != nil {
 		return fmt.Errorf("erro ao enfileirar mensagem: %w", err)
 	}
+
+	// incrementa métrica de sucesso
+	metrics.MessagesEnqueued.Inc()
 	return nil
 }

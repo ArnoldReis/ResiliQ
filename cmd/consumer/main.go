@@ -8,14 +8,21 @@ import (
 	"syscall"
 
 	"github.com/arnoldreis/resiliq/internal/database"
+	"github.com/arnoldreis/resiliq/internal/logger"
 	"github.com/arnoldreis/resiliq/internal/queue"
+	"go.uber.org/zap"
 )
 
 func main() {
+	// inicializa o logger estruturado
+	logger.InitLogger()
+	log := logger.GetLogger()
+	defer log.Sync()
+
 	// inicializa conexão com o banco
 	db, err := database.NewConnection("localhost", 5432, "user", "password", "resiliq")
 	if err != nil {
-		log.Fatalf("Falha na conexão com o banco: %v", err)
+		log.Fatal("Falha na conexão com o banco", zap.Error(err))
 	}
 
 	consumer := queue.NewConsumer(db)

@@ -7,16 +7,24 @@ import (
 	"os"
 
 	"github.com/arnoldreis/resiliq/internal/database"
+	"github.com/arnoldreis/resiliq/internal/logger"
 	"github.com/arnoldreis/resiliq/internal/queue"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.uber.org/zap"
 )
 
 func main() {
+	// inicializa o logger estruturado
+	logger.InitLogger()
+	log := logger.GetLogger()
+	defer log.Sync()
+
 	// inicializa conexão com o banco
 	db, err := database.NewConnection("localhost", 5432, "user", "password", "resiliq")
 	if err != nil {
-		log.Fatalf("Falha na conexão com o banco: %v", err)
+		log.Fatal("Falha na conexão com o banco", zap.Error(err))
 	}
 
 	producer := queue.NewProducer(db)
@@ -24,6 +32,9 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+
+	// endpoint para métricas do prometheus
+	r.Handle("/metrics", promhttp.Handler())
 
 	/**
 	 * Endpoint para enfileirar novas mensagens
