@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"os"
 
@@ -53,7 +52,7 @@ func main() {
 		}
 
 		if err := producer.Enqueue(r.Context(), payload, idKeyPtr); err != nil {
-			log.Printf("Erro ao enfileirar: %v", err)
+			log.Error("Erro ao enfileirar mensagem", zap.Error(err))
 			http.Error(w, "Erro interno", http.StatusInternalServerError)
 			return
 		}
@@ -64,11 +63,11 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "9090"
 	}
 
-	log.Printf("Produtor rodando na porta %s", port)
+	log.Info("Produtor rodando", zap.String("port", port))
 	if err := http.ListenAndServe(":"+port, r); err != nil {
-		log.Fatal(err)
+		log.Fatal("Erro no servidor HTTP", zap.Error(err))
 	}
 }

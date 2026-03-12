@@ -59,19 +59,19 @@ go run cmd/consumer/main.go
 
 ### Enfileirar Mensagem
 ```bash
-curl -X POST http://localhost:8080/enqueue \
+curl -X POST http://localhost:9090/enqueue \
      -H "Content-Type: application/json" \
      -d '{"task": "send_welcome_email", "user_id": 123}'
 ```
 
 ### Enfileirar com Idempotência
 ```bash
-curl -X POST http://localhost:8080/enqueue \
+curl -X POST http://localhost:9090/enqueue \
      -H "X-Idempotency-Key: unique-key-1" \
      -d '{"task": "process_payment", "amount": 100}'
 ```
 
 ### Ver Métricas
 ```bash
-curl http://localhost:8080/metrics
+curl http://localhost:9090/metrics
 ```
