@@ -72,6 +72,5 @@ curl -X POST http://localhost:9090/enqueue \
 ```
 
 ### Ver Métricas
-```bash
-curl http://localhost:9090/metrics
-```
+- **Produtor (Enfileiramento)**: `curl http://localhost:9090/metrics`
+- **Consumidor (Processamento)**: `curl http://localhost:9091/metrics`
